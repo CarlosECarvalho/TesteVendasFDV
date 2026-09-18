@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend - Sistema de Gestão de Vendas (Next.js 16)
 
-## Getting Started
+Módulo frontend da aplicação, desenvolvido com **Next.js 16 (App Router)**, **React 19**, **TypeScript** e **Tailwind CSS v4**.
 
-First, run the development server:
+---
 
+## 🛠️ Tecnologias e Recursos
+
+- **Next.js 16** com **App Router** (`src/app/` com rotas para cada tela)
+- **React 19** com hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, `useContext`)
+- **Tailwind CSS v4** com design responsivo
+- **Tema Claro / Escuro (Dark Mode)** via `ThemeProvider` e persistência local
+- **Biblioteca de Ícones**: `lucide-react`
+- **Componentes UI Reutilizáveis**: `Button`, `Input`, `Card`, `Badge`, `Modal`, `ConfirmDialog`, `Toast`
+- **Máscaras e Formatações**: CNPJ, Moeda BRL e Datas
+
+---
+
+## 🚀 Execução em Modo de Desenvolvimento
+
+### 1. Instalar Dependências
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Iniciar Servidor de Desenvolvimento
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Acesse em [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> **Observação**: Certifique-se de que a API backend está em execução na porta `5000` (ou configure a variável de ambiente `NEXT_PUBLIC_API_URL` caso utilize outra porta).
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Scripts Disponíveis
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev`: Inicia o servidor local de desenvolvimento com hot-reload.
+- `npm run build`: Compila a aplicação para produção (gera os arquivos estáticos e o build standalone).
+- `npm run start`: Inicia o servidor Next.js em modo de produção.
+- `npm run lint`: Executa a verificação estática do ESLint.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📂 Telas Implementadas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Dashboard Inicial (`/`)**: Listagem dos pedidos, métricas e busca rápida com modal para início de venda.
+2. **Novo Pedido (`/pedidos/novo`)**: Catálogo interativo de produtos com validação de estoque, carrinho e recálculo dinâmico do total. Permite carga do cenário com `?cenario=fgv`.
+3. **Detalhamento do Pedido (`/pedidos/[id]`)**: Exibição completa dos dados da venda e impressão de comprovante.
+4. **Catálogo de Produtos (`/produtos`)**: Cadastro de novos produtos e acompanhamento de estoque.
+5. **Cadastro de Clientes (`/clientes`)**: Cadastro com máscara de CNPJ e listagem.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+Para a documentação completa da solução fullstack e instruções do Docker Compose, consulte o [README.md principal da raiz do projeto](../README.md).
+

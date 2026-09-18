@@ -1,51 +1,64 @@
 # Sistema de Gestão de Vendas - Teste Técnico FGV
 
-Projeto desenvolvido como solução para o **Teste Técnico de Desenvolvedor Fullstack da FGV Conhecimento**, atendendo integralmente a todos os requisitos técnicos, arquiteturais e de regras de negócio especificados na documentação.
+Solução fullstack desenvolvida para o **Processo Seletivo de Desenvolvedor Fullstack da FGV Conhecimento**, atendendo integralmente e superando todos os requisitos técnicos, arquiteturais e de regras de negócio especificados na documentação do teste.
 
 ---
 
-## 🎯 Contexto da Aplicação e Cenário de Avaliação
+## 📑 Sumário
 
-Uma loja realiza vendas de produtos por meio de um sistema interno:
-- **Cenário**: O cliente **João da Silva** deseja realizar uma compra de **2 monitores** e **1 teclado USB**.
-- **Estoque inicial**: A loja possui **5 monitores** e **0 teclados USB**.
-- **Regra de Estoque**: Para que um produto seja incluído no pedido, é obrigatório que a quantidade solicitada esteja disponível em estoque.
-- **Flexibilidade**: O vendedor pode adicionar quantos produtos desejar, desde que estejam disponíveis.
-- **Cálculo Dinâmico**: O sistema recalcula automaticamente o valor total do pedido em tempo real sempre que um item for incluído, removido ou quando houver alteração na quantidade ou no preço unitário.
-- **Tratamento de Exceções & Ações Críticas**: Mensagens informativas claras para o usuário, confirmações em ações críticas (ex: confirmação antes de concluir a venda ou remover itens) e confirmação de sucesso/falha de cada operação.
+- [🎯 Contexto e Cenário de Avaliação](#-contexto-e-cenário-de-avaliação)
+- [🏛️ Arquitetura e Tecnologias](#️-arquitetura-e-tecnologias)
+- [🗄️ Modelagem do Banco de Dados](#️-modelagem-do-banco-de-dados-sql-server)
+- [🖥️ Telas da Aplicação](#️-telas-da-aplicação)
+- [🚀 Como Executar o Projeto](#-como-executar-o-projeto)
+  - [Opção 1: Execução Completa via Docker Compose (Recomendada)](#opção-1-execução-completa-via-docker-compose-recomendada)
+  - [Opção 2: Execução Local (Híbrida / Desenvolvimento)](#opção-2-execução-local-híbrida--desenvolvimento)
+- [🧪 Roteiro de Validação do Cenário FGV](#-roteiro-de-validação-do-cenário-fgv)
+- [📡 Documentação da API RESTful](#-documentação-da-api-restful)
+- [📋 Checklist de Conformidade](#-checklist-de-conformidade-com-os-requisitos)
+- [📂 Estrutura do Repositório](#-estrutura-do-repositório)
 
 ---
 
-## 🏛️ Arquitetura da Solução
+## 🎯 Contexto e Cenário de Avaliação
 
-### Backend: ASP.NET Core & Dapper
-- **Framework**: ASP.NET Core (.NET 8 ou superior).
-- **Padrão Arquitetural**: Arquitetura em Camadas bem definidas:
-  - `Controllers/`: Endpoints RESTful com verbos HTTP semânticos (`GET`, `POST`), códigos de status adequados (`200`, `201`, `400`, `404`, `409`, `500`) e validação de DTOs via DataAnnotations.
-  - `Services/`: Camada de regras de negócio, validação rigorosa de disponibilidade de estoque, validação de duplicidade de CNPJ e cálculo de totais.
-  - `Repositories/`: Camada de persistência utilizando **Dapper**, com queries SQL parametrizadas e **transações atômicas ACID** (`SqlTransaction`) para inserção do pedido, itens e atualização do estoque simultaneamente.
-  - `Models/`: Entidades de domínio mapeadas diretamente das tabelas do SQL Server.
-  - `DTOs/`: Objetos de transferência de dados desacoplados para entrada e saída.
-  - `Infrastructure/`: 
-    - `DbConnectionFactory`: Fábrica de conexões SQL Server.
-    - `DatabaseInitializer`: Inicializador automático que cria o banco `VendasDB`, as 4 tabelas com suas constraints e a carga inicial de dados (Seed).
-    - `ExceptionMiddleware`: Middleware global de captura de exceções no padrão RFC 7807 (ProblemDetails).
+Uma loja realiza vendas de produtos de informática por meio de um sistema interno integrado:
+- **Cenário do Teste**: O cliente **João da Silva** deseja realizar uma compra de **2 monitores** e **1 teclado USB**.
+- **Estoque Inicial**: A loja possui **5 monitores** e **0 teclados USB**.
+- **Regra de Disponibilidade de Estoque**: Para que um produto seja incluído ou faturado, a quantidade solicitada deve estar obrigatoriamente disponível em estoque. Produtos esgotados ficam bloqueados na interface com feedback visual impeditivo.
+- **Flexibilidade Comercial**: O vendedor pode adicionar quantos itens desejar, alterar quantidades e customizar o preço unitário praticado na venda.
+- **Cálculo Dinâmico em Tempo Real**: O sistema recalcula automaticamente o valor total do pedido a cada inclusão, exclusão ou alteração de quantidade/preço.
+- **Ações Críticas e UX**: Confirmações modais para ações irreversíveis (finalização de venda e remoção de itens) e sistema de notificações flutuantes (*Toasts*) para erros e sucessos.
+
+---
+
+## 🏛️ Arquitetura e Tecnologias
+
+### Backend (.NET 10 / C# 13)
+- **Framework**: ASP.NET Core Web API (.NET 10).
+- **Padrão Arquitetural**: Arquitetura em Camadas com desacoplamento estrito e Injeção de Dependência nativa:
+  - `Controllers/`: Endpoints RESTful com verbos semânticos, status codes apropriados (`200`, `201`, `400`, `404`, `409`, `500`) e documentação Swagger.
+  - `Services/`: Camada de regras de negócio (validação de CNPJ duplicado, conferência atômica de estoque, cálculo de totais).
+  - `Repositories/`: Camada de persistência utilizando **Dapper**, com queries SQL parametrizadas de alta performance e **transações atômicas ACID (`SqlTransaction`)** para gravação do pedido, itens e baixa de estoque simultaneamente.
+  - `Models/` & `DTOs/`: Separação rígida entre entidades do banco e objetos de transporte de dados com validações via DataAnnotations.
+  - `Infrastructure/`:
+    - `DbConnectionFactory`: Gerenciador de conexões SQL Server.
+    - `DatabaseInitializer`: Script de auto-migração que cria o banco `VendasDB`, todas as tabelas, constraints e carga de dados inicial (*Seed*) na inicialização da aplicação.
+    - `ExceptionMiddleware`: Middleware global de captura de exceções no padrão RFC 7807 (`ProblemDetails`).
 - **Documentação Interativa**: Swagger / OpenAPI integrado em `/swagger`.
 
-### Frontend: Next.js (App Router) & Tailwind CSS
-- **Framework**: Next.js (com **App Router**, onde cada tela é uma rota única).
-- **Estilização**: Tailwind CSS com layout responsivo, moderno e de alto contraste.
-- **Gerenciamento de Estado**: Hooks nativos do React (`useState`, `useEffect`, `useCallback`, `useMemo`, `useContext`) garantindo reatividade instantânea na interface.
+### Frontend (Next.js 16 & Tailwind CSS v4)
+- **Framework**: Next.js 16 com **App Router** e React 19.
+- **Estilização**: Tailwind CSS v4 com design moderno, responsivo e suporte nativo a **Dark Mode / Light Mode** com alternância instantânea.
+- **Gerenciamento de Estado**: Hooks nativos do React (`useState`, `useEffect`, `useCallback`, `useMemo`, `useContext`) para máxima previsibilidade e reatividade instantânea.
 - **Componentes Reutilizáveis**:
-  - `Button`: Variações (primary, secondary, outline, danger, success), tamanhos e suporte a loading state.
-  - `Input`: Com rótulo, mensagens de erro, ícones e acessibilidade.
-  - `Modal`: Janelas modais com backdrop blur, navegação por teclado (ESC) e transições.
-  - `ConfirmDialog`: Modal especializado para confirmações em ações críticas.
-  - `ToastProvider / useToast`: Notificações flutuantes animadas (sucesso, erro, alerta e informativo).
-  - `Badge`, `Card`, `Navbar`.
-- **Camada de Network Reutilizável**: Módulo centralizado `api.ts` com tipagem TypeScript e captura de erros da API.
-- **Máscaras de Formatação**:
-  - CNPJ: `00.000.000/0000-00`
+  - `Button`, `Input`, `Card`, `Badge`.
+  - `Modal` e `ConfirmDialog`: Modais acessíveis com backdrop blur e navegação por teclado (ESC).
+  - `ToastProvider / useToast`: Notificações flutuantes com autoclose e estados (sucesso, erro, alerta, info).
+  - `ThemeToggle` & `ThemeProvider`: Alternância de tema claro/escuro com persistência em `localStorage`.
+- **Camada de Network**: Cliente HTTP centralizado (`api.ts`) com tratamento uniforme de erros do backend.
+- **Máscaras e Utilitários**:
+  - Máscara de CNPJ: `00.000.000/0000-00`
   - Moeda: Real Brasileiro (`R$ 1.200,00`)
   - Datas: `dd/MM/yyyy às HH:mm`
 
@@ -53,7 +66,7 @@ Uma loja realiza vendas de produtos por meio de um sistema interno:
 
 ## 🗄️ Modelagem do Banco de Dados (SQL Server)
 
-Tabelas modeladas estritamente de acordo com o diagrama da documentação:
+O esquema relacional segue estritamente a especificação exigida no edital:
 
 ```
 +------------------------------------+          +------------------------------------+
@@ -77,130 +90,197 @@ Tabelas modeladas estritamente de acordo com o diagrama da documentação:
 +------------------------------------+          +------------------------------------+
 ```
 
-- **Chaves Primárias**: `PK_Cliente`, `PK_Produto`, `PK_Pedido`, e chave primária composta `PK_ItensPedido (CodPedido, CodProduto)`.
-- **Chaves Estrangeiras**: `FK_Pedido_Cliente`, `FK_ItensPedido_Pedido`, `FK_ItensPedido_Produto`.
-- **Restrição de Unicidade**: `UQ_Cliente_CNPJ` garantindo que o campo `CNPJ` da tabela `Cliente` seja único.
+- **Chaves Primárias**: `PK_Cliente`, `PK_Produto`, `PK_Pedido` e chave composta `PK_ItensPedido (CodPedido, CodProduto)`.
+- **Chaves Estrangeiras**: `FK_Pedido_Cliente`, `FK_ItensPedido_Pedido` e `FK_ItensPedido_Produto`.
+- **Restrição de Unicidade**: `UQ_Cliente_CNPJ` garantindo que o CNPJ de cada cliente seja único no sistema.
 
 ---
 
-## 🖥️ As 5 Telas Principais do Sistema
+## 🖥️ Telas da Aplicação
 
-| # | Rota | Tela | Funcionalidades |
-|---|------|------|-----------------|
-| 1 | `/` | **Tela Inicial** | Listagem de todos os pedidos criados; Filtros combinados por data inicial/final e nome/CNPJ do cliente; Métricas de faturamento e itens; Modal de criação com busca por CNPJ de cliente pré-cadastrado. |
-| 2 | `/pedidos/novo` | **Tela de Pedido** | Identificação do cliente; Catálogo completo de produtos com status de estoque em tempo real; Validação impeditiva de inclusão caso sem estoque; Carrinho com alteração de quantidade e preço unitário; **Valor total visível e recalculado instantaneamente**; Diálogo de confirmação para finalização. |
-| 3 | `/pedidos/[id]` | **Detalhamento do Pedido** | Exibição de todos os dados do pedido (código, data, dados cadastrais do cliente, itens com quantidades, valores unitários e subtotais, valor total final); Opção de impressão do comprovante. |
-| 4 | `/produtos` | **Cadastro de Produtos** | Formulário para inclusão de novos produtos (Nome, Preço e Estoque inicial); Grid com catálogo atual e alertas de estoque baixo ou esgotado. |
-| 5 | `/clientes` | **Cadastro de Clientes** | Formulário com máscara de CNPJ (`00.000.000/0000-00`), Nome e E-mail; Validação contra CNPJs duplicados; Listagem dos clientes cadastrados e atalho para iniciar pedido. |
+| Rota | Tela | Funcionalidades |
+|---|---|---|
+| `/` | **Tela Inicial / Dashboard** | Listagem de pedidos com paginação/cards; Métricas resumidas de vendas; Filtros combinados por período (data inicial/final) e cliente (nome ou CNPJ); Botão e Modal para início rápido de pedido com busca de cliente por CNPJ. |
+| `/pedidos/novo` | **Tela de Pedido** | Identificação do cliente selecionado; Catálogo visual de produtos com controle de estoque em tempo real; Carrinho com alteração dinâmica de quantidade e preço unitário; Recálculo imediato do valor total; Confirmação modal antes de finalizar a venda; Suporte a carga direta do cenário via `?cenario=fgv`. |
+| `/pedidos/[id]` | **Detalhamento do Pedido** | Visão completa do pedido emitido: cabeçalho com dados cadastrais do cliente, tabela de itens com quantidades, valores unitários e subtotais, resumo financeiro e botão para impressão do comprovante. |
+| `/produtos` | **Cadastro de Produtos** | Formulário para cadastro de novos itens com validações de preço e estoque inicial; Tabela interativa com busca e badges indicando nível de estoque (Em estoque, Baixo estoque ou Esgotado). |
+| `/clientes` | **Cadastro de Clientes** | Formulário com aplicação de máscara de CNPJ em tempo real; Validação no cliente e no servidor contra duplicidade de CNPJ; Listagem de clientes com atalho direto para criar pedido. |
 
 ---
 
-## 🚀 Como Executar a Aplicação
+## 🚀 Como Executar o Projeto
+
+Você pode executar o projeto de duas formas: **100% via Docker Compose** (sem necessidade de instalar .NET ou Node.js) ou em **Modo Local/Híbrido**.
 
 ### Pré-requisitos
-- [.NET 8 ou .NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js (LTS v20+ ou v24+)](https://nodejs.org/) e npm
-- [SQL Server](https://www.microsoft.com/sql-server) (pode ser o **SQL Server Express LocalDB** nativo do Windows ou **Docker**)
+- [Docker e Docker Compose](https://www.docker.com/) (para execução via contêineres)
+- Ou localmente: [.NET 10 SDK](https://dotnet.microsoft.com/download), [Node.js 20+](https://nodejs.org/) e SQL Server (LocalDB ou instância dedicada).
 
 ---
 
-### Opção A: Execução Local com SQL Server LocalDB (Padrão Windows)
+### Opção 1: Execução Completa via Docker Compose (Recomendada)
 
-O projeto está configurado para utilizar a instância `(localdb)\mssqllocaldb` do Windows. Ao iniciar a API, o banco de dados `VendasDB`, suas tabelas e o seed inicial com o cenário de teste são **criados automaticamente**.
+Com apenas **um comando**, o Docker inicializa o SQL Server 2022, o backend ASP.NET Core e o frontend Next.js:
 
-#### 1. Iniciar o Backend (API)
 ```bash
-# Navegar até a pasta da API
-cd backend/src/VendasApi
+# Na raiz do repositório:
+docker compose up --build -d
+```
 
-# Restaurar dependências e executar
+> **Aguarde alguns instantes** para o SQL Server passar pelo teste de saúde (*healthcheck*), o banco `VendasDB` ser criado automaticamente e os contêineres estarem prontos.
+
+#### URLs de Acesso:
+- **Frontend (Aplicação Web)**: [http://localhost:3000](http://localhost:3000)
+- **Backend (API RESTful)**: [http://localhost:5000](http://localhost:5000)
+- **Documentação Swagger**: [http://localhost:5000/swagger](http://localhost:5000/swagger)
+- **SQL Server**: `localhost:1433` (Usuário: `sa` | Senha: `Vendas@StrongPass2026!`)
+
+Para encerrar os contêineres:
+```bash
+docker compose down
+```
+
+---
+
+### Opção 2: Execução Local (Híbrida / Desenvolvimento)
+
+Se desejar rodar a aplicação diretamente no seu ambiente de desenvolvimento:
+
+#### 1. Banco de Dados
+- **Opção A (SQL Server LocalDB nativo do Windows)**: Já configurado como padrão no `appsettings.json`. O banco e os dados iniciais são gerados sozinhos na primeira execução da API.
+- **Opção B (SQL Server via Docker)**:
+  ```bash
+  docker compose up sqlserver -d
+  ```
+
+#### 2. Executar o Backend
+```bash
+cd backend/src/VendasApi
+dotnet restore
 dotnet run
 ```
-- A API estará disponível em: `http://localhost:5000`
-- Documentação Swagger: `http://localhost:5000/swagger`
+*A API iniciará em `http://localhost:5000` e o Swagger estará disponível em `http://localhost:5000/swagger`.*
 
-#### 2. Iniciar o Frontend (Next.js)
-Abra outro terminal:
+#### 3. Executar o Frontend
+Em outro terminal:
 ```bash
-# Navegar até a pasta do frontend
 cd frontend
-
-# Instalar as dependências (se ainda não tiver feito)
 npm install
-
-# Iniciar em modo de desenvolvimento
 npm run dev
 ```
-- A aplicação estará acessível em: `http://localhost:3000`
+*O frontend estará acessível em `http://localhost:3000`.*
 
 ---
 
-### Opção B: Execução com Docker Compose (SQL Server Containerizado)
+## 🧪 Roteiro de Validação do Cenário FGV
 
-Caso prefira executar o SQL Server em container Docker:
+Para validar os requisitos propostos na documentação oficial:
 
-```bash
-# Na raiz do projeto, suba o container do SQL Server 2022
-docker compose up -d
-```
-
-Em seguida, execute a API apontando para a string `DockerConnection` (ou altere no `appsettings.json`):
-```bash
-cd backend/src/VendasApi
-dotnet run --launch-profile http
-```
-
----
-
-## 🧪 Roteiro de Validação do Cenário do Teste
-
-Para validar os requisitos propostos na documentação:
-
-1. Acesse `http://localhost:3000`.
-2. Na **Tela Inicial**, clique em **"Novo Pedido"**.
-3. No modal que se abrir:
-   - Clique em **"Usar João da Silva"** (preenche o CNPJ `12.345.678/0001-90`) e clique em **"Buscar"**.
-   - O sistema confirma os dados do cliente e libera o botão **"Avançar para o Pedido"**.
-4. Na **Tela de Pedido (`/pedidos/novo`)**:
-   - Observe o catálogo de produtos:
-     - **Monitor LED 27" Full HD**: Estoque: 5 | Preço: R$ 1.200,00
-     - **Teclado USB Mecânico**: Estoque: 0 (Badge vermelho "Sem Estoque")
-   - **Tentativa de adicionar o Teclado USB**:
-     - O botão está desabilitado e marcado como "Indisponível". Caso forçado, o sistema exibe notificação de erro informando que o produto está esgotado.
-   - **Adição dos 2 Monitores**:
-     - Selecione quantidade **2** no Monitor e clique em **"Adicionar"**.
-     - O item é incluído no carrinho e o **Valor Total do Pedido é recalculado imediatamente para R$ 2.400,00**.
-   - **Alteração de Valores**:
-     - Altere o preço unitário ou a quantidade no carrinho e observe o valor total sendo recalculado em tempo real.
-   - **Finalização**:
+1. Acesse [http://localhost:3000](http://localhost:3000).
+2. Clique em **"Novo Pedido"**:
+   - No modal, clique no atalho rápido **"Usar João da Silva"** (o sistema preenche o CNPJ `12.345.678/0001-90`) e clique em **"Buscar"**.
+   - O sistema valida a existência do cliente e libera o botão **"Avançar para o Pedido"**.
+   *(Alternativamente, acesse direto [http://localhost:3000/pedidos/novo?cenario=fgv](http://localhost:3000/pedidos/novo?cenario=fgv) para carga automatizada do cenário).*
+3. **Na Tela de Pedido (`/pedidos/novo`)**:
+   - **Verificação do Teclado USB**:
+     - O item aparece no catálogo com estoque `0` e badge vermelho **"Sem Estoque"**.
+     - O botão de adicionar permanece **desabilitado** como "Indisponível", impedindo a violação da regra de negócio.
+   - **Inclusão dos 2 Monitores**:
+     - No card do **Monitor LED 27"** (estoque: 5 | preço base: R$ 1.200,00), defina a quantidade como **2** e clique em **"Adicionar ao Pedido"**.
+     - O produto é inserido no carrinho e o **Valor Total é recalculado instantaneamente para R$ 2.400,00**.
+   - **Alteração Dinâmica de Quantidades e Preços**:
+     - Altere a quantidade ou o preço unitário diretamente nos campos do carrinho. O valor total é recalculado em tempo real.
+   - **Finalização com Confirmação Crítica**:
      - Clique em **"Finalizar e Emitir Pedido"**.
-     - Um diálogo crítico solicita confirmação da venda.
-     - Ao confirmar, o pedido é salvo com sucesso e você é redirecionado para a **Tela de Detalhamento (`/pedidos/1`)**.
-   - **Validação do Estoque**:
-     - Ao retornar à tela de novo pedido ou na tela de Produtos, o estoque do Monitor foi reduzido automaticamente para **3 unidades**.
+     - Um modal de confirmação solicita aprovação da operação crítica.
+     - Ao confirmar, uma notificação de sucesso é disparada e você é redirecionado para a tela de detalhes.
+4. **Na Tela de Detalhes (`/pedidos/[id]`)**:
+   - Visualize os dados completos da venda emitida, itens, valores e opção de impressão.
+5. **Conferência da Baixa de Estoque**:
+   - Ao acessar `/produtos` ou iniciar um novo pedido, verifique que o estoque do Monitor LED foi reduzido automaticamente para **3 unidades**.
 
 ---
 
-## 📋 Checklist de Conformidade com o Edital FGV
+## 📡 Documentação da API RESTful
 
-| Requisito | Status | Implementação |
+A API segue as melhores práticas RESTful com tratamento global de erros RFC 7807 (`ProblemDetails`).
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/clientes` | Lista todos os clientes cadastrados |
+| `GET` | `/api/clientes/{id}` | Obtém os dados de um cliente específico |
+| `GET` | `/api/clientes/cnpj/{cnpj}` | Busca cliente pelo número de CNPJ |
+| `POST` | `/api/clientes` | Cadastra novo cliente (valida duplicidade de CNPJ) |
+| `GET` | `/api/produtos` | Lista todos os produtos com estoque atualizado |
+| `GET` | `/api/produtos/{id}` | Obtém os dados de um produto |
+| `POST` | `/api/produtos` | Cadastra um novo produto |
+| `GET` | `/api/pedidos` | Lista pedidos (suporta filtros `dataInicio`, `dataFim`, `termo`) |
+| `GET` | `/api/pedidos/{id}` | Retorna o pedido completo com cliente e lista de itens |
+| `POST` | `/api/pedidos` | Cria um pedido com transação ACID e baixa atômica de estoque |
+
+---
+
+## 📋 Checklist de Conformidade com os Requisitos
+
+| Requisito do Edital | Status | Detalhes da Implementação |
 |---|:---:|---|
-| **ASP.NET Core 8 ou superior** | ✅ Concluído | Desenvolvido com ASP.NET Core (.NET 10 / .NET 8) |
-| **Padrão RESTful** | ✅ Concluído | Rotas `/api/pedidos`, `/api/clientes`, `/api/produtos` com verbos e status HTTP semânticos |
-| **Arquitetura em Camadas** | ✅ Concluído | Pastas organizadas: `Controllers`, `Services`, `Repositories`, `Models`, `DTOs` |
-| **Banco SQL Server + Dapper** | ✅ Concluído | Dapper com queries tipadas, mapeamento limpo e transações atômicas |
-| **Modelagem com PKs, FKs e CNPJ Único** | ✅ Concluído | Chaves primárias e estrangeiras criadas; Constraint `UQ_Cliente_CNPJ` aplicada |
-| **Next.js com App Router** | ✅ Concluído | Next.js utilizando a estrutura `src/app` com rotas únicas para cada tela |
-| **5 Telas Principais** | ✅ Concluído | Tela Inicial (`/`), Pedido (`/pedidos/novo`), Detalhe (`/pedidos/[id]`), Produtos (`/produtos`), Clientes (`/clientes`) |
-| **Gerenciamento de Estado por Hooks** | ✅ Concluído | Reatividade via `useState`, `useEffect`, `useCallback`, `useMemo`, `useContext` |
-| **Componentes Reutilizáveis** | ✅ Concluído | `Button`, `Input`, `Modal`, `Card`, `Badge`, `ConfirmDialog`, `Toast` |
-| **Tailwind CSS** | ✅ Concluído | Estilização completa, moderna, limpa e responsiva |
-| **Camada de Network Reutilizável** | ✅ Concluído | Módulo `api.ts` com interceptor de erros RFC 7807 |
-| **Máscaras de Formatação** | ✅ Concluído | Módulo `masks.ts` aplicando máscara de CNPJ, moeda R$ e datas |
-| **Tratamento de Erros e Confirmações Críticas** | ✅ Concluído | Sistema de Toast com mensagens informativas e Modais de Confirmação para ações críticas |
+| **ASP.NET Core (.NET 8 ou superior)** | ✅ Concluído | Desenvolvido em .NET 10 com C# 13 e injeção de dependência nativa. |
+| **Padrão RESTful e Status Semânticos** | ✅ Concluído | Verbos semânticos e respostas com códigos HTTP 200, 201, 400, 404, 409 e 500. |
+| **Arquitetura em Camadas** | ✅ Concluído | Desacoplamento entre Controllers, Services, Repositories, Models e DTOs. |
+| **SQL Server + Dapper com Transações ACID** | ✅ Concluído | Dapper com queries parametrizadas e `SqlTransaction` atômica para pedidos e estoque. |
+| **Modelagem com PKs, FKs e CNPJ Único** | ✅ Concluído | 4 tabelas relacionais com PKs, FKs com integridade referencial e constraint `UQ_Cliente_CNPJ`. |
+| **Next.js com App Router** | ✅ Concluído | Next.js 16 moderno utilizando convenções do App Router (`src/app`). |
+| **5 Telas Principais** | ✅ Concluído | Dashboard (`/`), Pedido (`/pedidos/novo`), Detalhes (`/pedidos/[id]`), Produtos (`/produtos`) e Clientes (`/clientes`). |
+| **Gerenciamento de Estado por Hooks** | ✅ Concluído | Uso eficiente de `useState`, `useEffect`, `useCallback`, `useMemo` e `useContext`. |
+| **Componentes Reutilizáveis** | ✅ Concluído | `Button`, `Input`, `Modal`, `ConfirmDialog`, `Card`, `Badge`, `Toast` e `ThemeToggle`. |
+| **Tailwind CSS & Responsividade** | ✅ Concluído | Interface com Tailwind CSS v4, suporte a Dark/Light mode e design responsivo. |
+| **Recálculo do Total em Tempo Real** | ✅ Concluído | Atualização dinâmica instantânea ao incluir, remover ou alterar quantidade/preço. |
+| **Ações Críticas & Notificações** | ✅ Concluído | Diálogos modais de confirmação em operações críticas e Toasts animados. |
+| **Docker Compose Fullstack** | ✅ Concluído | Orquestração completa de Banco, API e Frontend em contêineres prontos para uso. |
+
+---
+
+## 📂 Estrutura do Repositório
+
+```
+TesteVendasFDV/
+├── backend/
+│   ├── src/
+│   │   └── VendasApi/
+│   │       ├── Controllers/          # Endpoints RESTful (Clientes, Produtos, Pedidos)
+│   │       ├── Services/             # Regras de negócio e validações
+│   │       ├── Repositories/         # Acesso a dados com Dapper e Transações ACID
+│   │       ├── Models/               # Entidades de domínio mapeadas do banco
+│   │       ├── DTOs/                 # Objetos de transferência de dados tipados
+│   │       ├── Infrastructure/       # Factory de conexão, Middleware RFC 7807 e Seed
+│   │       ├── Program.cs            # Configuração de DI, CORS, Middlewares e Swagger
+│   │       └── appsettings.json      # Connection strings para LocalDB e Docker
+│   ├── Dockerfile                    # Build multi-stage da API .NET 10
+│   └── VendasApi.slnx
+├── frontend/
+│   ├── src/
+│   │   ├── app/                      # Rotas do App Router (5 telas principais)
+│   │   │   ├── page.tsx              # Tela Inicial / Dashboard de Pedidos
+│   │   │   ├── pedidos/novo/         # Tela de Novo Pedido (Catálogo + Carrinho)
+│   │   │   ├── pedidos/[id]/         # Tela de Detalhamento do Pedido
+│   │   │   ├── produtos/             # Tela de Cadastro e Listagem de Produtos
+│   │   │   └── clientes/             # Tela de Cadastro e Listagem de Clientes
+│   │   ├── components/               # Componentes compartilhados e ThemeToggle
+│   │   │   └── ui/                   # Button, Input, Modal, ConfirmDialog, Toast, Badge
+│   │   ├── services/                 # Clientes de API desacoplados
+│   │   ├── types/                    # Interfaces e tipos TypeScript
+│   │   └── utils/                    # Utilitários e máscaras (CNPJ, Moeda, Data)
+│   ├── Dockerfile                    # Build multi-stage otimizado do Next.js
+│   ├── package.json
+│   └── next.config.ts
+├── database/
+│   └── init.sql                      # Script DDL e DML com carga de dados do teste
+├── docker-compose.yml                # Orquestração do SQL Server, Backend e Frontend
+└── README.md                         # Documentação completa do projeto
+```
 
 ---
 
 ## 👨‍💻 Autor
-Desenvolvido com excelência técnica para o Teste FGV Conhecimento.
+Desenvolvido com rigor técnico, arquitetura limpa e foco na melhor experiência de uso para a avaliação do **Teste Técnico FGV Conhecimento**.
 
